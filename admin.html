@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — وحدة IT</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0a1628; --navy2:#112240; --gold:#c9a84c; --goldl:#e8c97a;
+  --cream:#f5f0e8; --muted:#6b7a99; --border:rgba(201,168,76,.22);
+  --green:#2d7a4f; --red:#8b2020; --orange:#c2621a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:var(--navy);color:var(--cream);min-height:100vh;direction:rtl;}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 15% 50%,rgba(201,168,76,.05) 0%,transparent 60%),
+  repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(201,168,76,.012) 40px,rgba(201,168,76,.012) 41px);
+  pointer-events:none;z-index:0;}
+#loginScreen{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.login-card{background:rgba(17,34,64,.95);border:1px solid var(--border);border-radius:20px;
+  padding:48px 40px;width:420px;max-width:95vw;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.5);}
+.login-icon{font-size:52px;margin-bottom:16px;}
+.login-title{font-family:'Amiri',serif;font-size:24px;color:var(--cream);margin-bottom:6px;}
+.login-sub{font-size:12px;color:var(--muted);margin-bottom:32px;}
+.inp{width:100%;background:rgba(10,22,40,.8);border:1px solid var(--border);border-radius:10px;
+  padding:13px 16px;color:var(--cream);font-size:14px;font-family:'Cairo',sans-serif;
+  direction:ltr;text-align:center;margin-bottom:14px;}
+.inp:focus{outline:none;border-color:var(--gold);}
+.btn-login{width:100%;background:var(--gold);color:var(--navy);border:none;border-radius:10px;
+  padding:14px;font-size:15px;font-weight:700;font-family:'Cairo',sans-serif;cursor:pointer;transition:all .2s;}
+.btn-login:hover{background:var(--goldl);}
+.btn-login:disabled{opacity:.5;cursor:not-allowed;}
+.err{background:rgba(139,32,32,.15);border:1px solid rgba(139,32,32,.35);color:#e06060;
+  border-radius:8px;padding:10px;font-size:13px;margin-top:12px;}
+#appHeader{display:none;position:relative;z-index:10;background:rgba(10,22,40,.97);
+  border-bottom:1px solid var(--border);padding:0 32px;height:64px;
+  align-items:center;justify-content:space-between;backdrop-filter:blur(10px);}
+.hlogo{display:flex;align-items:center;gap:12px;}
+.hlogo-icon{font-size:24px;}
+.hlogo h1{font-size:14px;font-weight:700;color:var(--cream);}
+.hlogo p{font-size:10px;color:var(--gold);}
+.hstats{display:flex;gap:10px;flex-wrap:wrap;}
+.schip{display:flex;align-items:center;gap:6px;background:rgba(201,168,76,.07);
+  border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;}
+.schip span:first-child{color:var(--gold);}
+.schip-orange{background:rgba(194,98,26,.1);border-color:rgba(194,98,26,.3);}
+.schip-orange span:first-child{color:#f97316;}
+#appMain{display:none;position:relative;z-index:1;padding:28px 32px;}
+.tabs{display:flex;gap:6px;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:0;}
+.tab{padding:10px 20px;border-radius:8px 8px 0 0;font-size:13px;font-weight:600;
+  font-family:'Cairo',sans-serif;cursor:pointer;border:1px solid transparent;
+  border-bottom:none;color:var(--muted);background:transparent;transition:all .15s;
+  position:relative;bottom:-1px;}
+.tab.active{background:rgba(201,168,76,.1);border-color:var(--border);
+  color:var(--gold);border-bottom-color:var(--navy);}
+.panel{display:none;}
+.panel.active{display:block;}
+.panel-card{background:rgba(17,34,64,.7);border:1px solid var(--border);border-radius:12px;padding:24px;}
+.panel-title{font-size:13px;font-weight:700;color:var(--gold);letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.map-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.map-row{display:grid;grid-template-columns:1fr 16px 1fr;align-items:center;gap:6px;}
+.map-label{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);
+  border-radius:6px;padding:6px 10px;color:var(--gold);font-size:11px;text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.map-arrow{color:var(--muted);text-align:center;font-size:13px;}
+.map-sel{background:rgba(10,22,40,.8);border:1px solid rgba(201,168,76,.2);
+  border-radius:6px;padding:6px 8px;color:var(--cream);font-size:11px;
+  font-family:'Cairo',sans-serif;width:100%;direction:rtl;}
+.map-sel:focus{outline:none;border-color:var(--gold);}
+.map-required .map-label{border-color:rgba(201,168,76,.5);}
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-wrap input{width:100%;background:rgba(10,22,40,.8);border:1px solid var(--border);
+  border-radius:8px;padding:9px 34px 9px 12px;color:var(--cream);font-size:13px;
+  font-family:'Cairo',sans-serif;direction:rtl;}
+.search-wrap input::placeholder{color:var(--muted);}
+.search-wrap input:focus{outline:none;border-color:var(--gold);}
+.si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;}
+.ftabs{display:flex;gap:4px;}
+.ftab{padding:5px 12px;border-radius:14px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-size:11px;font-family:'Cairo',sans-serif;
+  cursor:pointer;transition:all .15s;}
+.ftab.active{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:700;}
+.tbl-wrap{border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:rgba(201,168,76,.12);}
+th{padding:11px 14px;font-size:11px;font-weight:700;color:var(--gold);
+  letter-spacing:.8px;text-align:right;white-space:nowrap;}
+tbody tr{border-top:1px solid rgba(201,168,76,.07);transition:background .1s;}
+tbody tr:hover{background:rgba(201,168,76,.04);}
+td{padding:11px 14px;font-size:12px;color:var(--cream);vertical-align:middle;}
+.td-name{font-weight:600;font-size:13px;}
+.td-email{color:var(--muted);font-size:11px;direction:ltr;text-align:right;}
+.td-date{color:var(--muted);font-size:11px;white-space:nowrap;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;
+  border-radius:12px;font-size:10px;font-weight:700;border:1px solid;}
+.badge-p{background:rgba(201,168,76,.1);border-color:rgba(201,168,76,.35);color:var(--gold);}
+.badge-a{background:rgba(45,122,79,.1);border-color:rgba(45,122,79,.35);color:#4aac78;}
+.badge-u{background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.35);color:#f97316;}
+.badge-exp{background:rgba(139,32,32,.1);border-color:rgba(139,32,32,.35);color:#e06060;}
+.td-actions{display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;
+  font-size:11px;font-weight:700;font-family:'Cairo',sans-serif;
+  cursor:pointer;border:none;transition:all .15s;white-space:nowrap;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-gold{background:var(--gold);color:var(--navy);}
+.btn-gold:hover:not(:disabled){background:var(--goldl);transform:translateY(-1px);}
+.btn-outline{background:transparent;color:var(--gold);border:1px solid rgba(201,168,76,.35);}
+.btn-outline:hover:not(:disabled){background:rgba(201,168,76,.07);}
+.btn-success{background:rgba(45,122,79,.12);color:#4aac78;border:1px solid rgba(45,122,79,.3);}
+.btn-success:hover:not(:disabled){background:rgba(45,122,79,.22);}
+.btn-danger{background:rgba(139,32,32,.12);color:#e06060;border:1px solid rgba(139,32,32,.28);}
+.btn-danger:hover:not(:disabled){background:rgba(139,32,32,.22);}
+.btn-orange{background:rgba(249,115,22,.12);color:#f97316;border:1px solid rgba(249,115,22,.28);}
+.btn-orange:hover:not(:disabled){background:rgba(249,115,22,.22);}
+.btn-orange-off{background:rgba(107,122,153,.1);color:var(--muted);border:1px solid rgba(107,122,153,.25);}
+.btn-orange-off:hover:not(:disabled){background:rgba(107,122,153,.18);}
+.btn-sm{padding:5px 10px;font-size:10px;}
+#toast{position:fixed;bottom:24px;left:50%;
+  transform:translateX(-50%) translateY(14px);
+  background:var(--navy2);border:1px solid var(--gold);color:var(--cream);
+  padding:10px 22px;border-radius:9px;font-size:13px;z-index:999;
+  opacity:0;transition:all .3s;white-space:nowrap;
+  box-shadow:0 6px 28px rgba(0,0,0,.5);pointer-events:none;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);
+  z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.overlay.show{display:flex;}
+.modal{background:var(--navy2);border:1px solid var(--border);border-radius:14px;
+  padding:28px;width:420px;max-width:92vw;box-shadow:0 20px 70px rgba(0,0,0,.6);}
+.modal h3{font-size:17px;font-weight:700;color:var(--cream);margin-bottom:7px;}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6;}
+.modal-actions{display:flex;gap:9px;justify-content:flex-end;}
+.empty-row td{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+.loading{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+tbody tr.row-update-req{background:rgba(249,115,22,.04);}
+tbody tr.row-expired{background:rgba(139,32,32,.05);}
+.edit-modal{background:var(--navy2);border:1px solid var(--border);border-radius:16px;
+  padding:28px;width:680px;max-width:95vw;max-height:88vh;overflow-y:auto;
+  box-shadow:0 20px 70px rgba(0,0,0,.6);}
+.edit-modal h3{font-size:17px;font-weight:700;color:var(--cream);margin-bottom:4px;}
+.edit-modal .edit-sub{font-size:11px;color:var(--muted);margin-bottom:20px;}
+.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.edit-field{display:flex;flex-direction:column;gap:5px;}
+.edit-field.full{grid-column:1/-1;}
+.edit-field label{font-size:11px;font-weight:700;color:var(--gold);}
+.edit-field input{background:rgba(10,22,40,.8);border:1px solid var(--border);
+  border-radius:8px;padding:9px 12px;color:var(--cream);font-size:12px;
+  font-family:'Cairo',sans-serif;direction:ltr;transition:border-color .2s;}
+.edit-field input:focus{outline:none;border-color:var(--gold);}
+.edit-field input.ar{direction:rtl;}
+.edit-actions{display:flex;gap:9px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:16px;}
+.saving-indicator{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-icon">🔐</div>
+    <div class="login-title">لوحة تحكم الأدمن</div>
+    <div class="login-sub">وحدة تكنولوجيا المعلومات — جامعة طنطا</div>
+    <input type="password" class="inp" id="passInput" placeholder="كلمة السر"
+           onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-login" onclick="doLogin()" id="loginBtn">دخول</button>
+    <div id="loginErr" style="display:none" class="err"></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div id="appHeader">
+  <div class="hlogo">
+    <div class="hlogo-icon">🎓</div>
+    <div>
+      <h1>لوحة تحكم — وحدة تكنولوجيا المعلومات</h1>
+      <p>نظام إفادات أعضاء هيئة التدريس</p>
+    </div>
+  </div>
+  <div class="hstats">
+    <div class="schip"><span>📋</span><span>الإجمالي:</span><strong id="s-total">—</strong></div>
+    <div class="schip"><span>✅</span><span>معتمد:</span><strong id="s-approved">—</strong></div>
+    <div class="schip"><span>⏳</span><span>انتظار:</span><strong id="s-pending">—</strong></div>
+    <div class="schip schip-orange"><span>⚠️</span><span>تحديث مطلوب:</span><strong id="s-update">—</strong></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="appMain">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('members',this)">👥 الأعضاء</button>
+    <button class="tab" onclick="switchTab('mapping',this)">⚙️ ربط الأعمدة</button>
+  </div>
+
+  <!-- TAB: MEMBERS -->
+  <div class="panel active" id="tab-members">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <input type="text" id="searchInp" placeholder="بحث بالاسم أو الإيميل أو القسم..." oninput="renderTable()">
+        <span class="si">🔍</span>
+      </div>
+      <div class="ftabs">
+        <button class="ftab active" onclick="setFilter('all',this)">الكل</button>
+        <button class="ftab" onclick="setFilter('approved',this)">✅ معتمد</button>
+        <button class="ftab" onclick="setFilter('pending',this)">⏳ انتظار</button>
+        <button class="ftab" onclick="setFilter('update',this)">⚠️ تحديث</button>
+        <button class="ftab" onclick="setFilter('expired',this)">❌ منتهي</button>
+      </div>
+      <button class="btn btn-gold" onclick="confirmApproveAll()">✅ اعتماد الكل</button>
+      <button class="btn btn-outline" onclick="loadMembers()">🔄 تحديث</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>الاسم</th><th>البريد الإلكتروني</th>
+            <th>القسم</th><th>الدرجة</th><th>الحالة</th>
+            <th>آخر تحميل</th><th>تحديث مطلوب</th><th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="tblBody">
+          <tr><td colspan="9" class="loading">⏳ جاري التحميل...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="tbl-count" style="font-size:11px;color:var(--muted);margin-top:8px;text-align:left"></div>
+  </div>
+
+  <!-- TAB: MAPPING -->
+  <div class="panel" id="tab-mapping">
+    <div class="panel-card">
+      <div class="panel-title">⚙️ ربط أعمدة الشيت بحقول الإفادة</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.7">
+        اضغط "تحميل أعمدة الشيت" أولاً، ثم حدد لكل حقل العمود المقابل في شيتك. الحقول بالنجمة (*) إلزامية.
+      </p>
+      <button class="btn btn-outline" onclick="loadHeaders()" id="loadHdrBtn" style="margin-bottom:18px">
+        📥 تحميل أعمدة الشيت
+      </button>
+      <div id="mappingArea" style="display:none">
+        <div class="map-grid" id="mapGrid"></div>
+        <button class="btn btn-gold" onclick="saveMapping()">💾 حفظ الربط</button>
+      </div>
+      <div id="mapMsg" style="margin-top:12px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- EDIT MODAL -->
+<div class="overlay" id="editOverlay">
+  <div class="edit-modal">
+    <h3>✏️ تعديل بيانات العضو</h3>
+    <div class="edit-sub" id="editSub"></div>
+    <div class="edit-grid">
+      <div class="edit-field"><label>الاسم (عربي)</label><input type="text" id="ef_name" class="ar"></div>
+      <div class="edit-field"><label>الاسم (إنجليزي)</label><input type="text" id="ef_name_en"></div>
+      <div class="edit-field full"><label>البريد الإلكتروني</label><input type="email" id="ef_email"></div>
+      <div class="edit-field"><label>القسم</label><input type="text" id="ef_dept" class="ar"></div>
+      <div class="edit-field"><label>الكلية</label><input type="text" id="ef_faculty" class="ar"></div>
+      <div class="edit-field"><label>الدرجة الوظيفية</label><input type="text" id="ef_rank" class="ar"></div>
+      <div class="edit-field"><label>عدد الأبحاث</label><input type="text" id="ef_pub_count"></div>
+      <div class="edit-field full"><label>رابط الصفحة الشخصية</label><input type="url" id="ef_personal_url" placeholder="https://..."></div>
+      <div class="edit-field"><label>Scopus (رابط)</label><input type="url" id="ef_scopus_url" placeholder="https://..."></div>
+      <div class="edit-field"><label>Scopus ID</label><input type="text" id="ef_scopus_id"></div>
+      <div class="edit-field"><label>ORCID</label><input type="text" id="ef_orcid" placeholder="0000-0000-0000-0000"></div>
+      <div class="edit-field"><label>Google Scholar</label><input type="url" id="ef_scholar" placeholder="https://..."></div>
+      <div class="edit-field"><label>ResearchGate</label><input type="url" id="ef_researchgate" placeholder="https://..."></div>
+      <div class="edit-field"><label>WOS (رابط)</label><input type="url" id="ef_wos_url" placeholder="https://..."></div>
+      <div class="edit-field"><label>WOS Res. ID</label><input type="text" id="ef_wos_id"></div>
+    </div>
+    <div class="edit-actions">
+      <div class="saving-indicator" id="savingIndicator" style="display:none">⏳ جاري الحفظ...</div>
+      <button class="btn btn-outline" onclick="closeEdit()">إلغاء</button>
+      <button class="btn btn-gold" id="saveEditBtn" onclick="saveEdit()">💾 حفظ التعديلات</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <h3 id="modalTitle"></h3>
+    <p id="modalMsg"></p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">إلغاء</button>
+      <button class="btn btn-gold" onclick="confirmModal()">تأكيد</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+var PASS = '';
+var allMembers = [];
+var activeFilter = 'all';
+var sheetHeaders = [];
+var modalCB = null;
+var editRowIndex = null;
+var tt;
+
+// ══════════════════════════════════════════
+// API BRIDGE — يشتغل في Apps Script وفي PWA
+// ══════════════════════════════════════════
+var IS_GAS = (typeof google !== 'undefined') && google.script;
+var API_URL = (typeof SCRIPT_URL !== 'undefined') ? SCRIPT_URL : '';
+
+function apiCall(action, params) {
+  return new Promise(function(resolve, reject) {
+    if (IS_GAS) {
+      // ── Apps Script mode ──
+      var p = params || {};
+      if (action === 'checkPass') {
+        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).checkAdminPass(p.pass);
+      } else if (action === 'getAllMembers') {
+        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getAllMembers(p.pass);
+      } else if (action === 'getStats') {
+        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getStats(p.pass);
+      } else if (action === 'getHeaders') {
+        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getSheetHeaders(p.pass);
+      } else if (action === 'getMapping') {
+        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getColumnMapping(p.pass);
+      } else if (action === 'saveMapping') {
+        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).saveColumnMapping(p.pass, p.mapping);
+      } else if (action === 'setStatus') {
+        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).setMemberStatus(p.pass, p.rowIndex, p.status);
+      } else if (action === 'updateMember') {
+        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).updateMemberData(p.pass, p.rowIndex, p.updates);
+      } else if (action === 'setUpdateRequired') {
+        // ✅ الإصلاح الرئيسي: تحويل القيمة لـ boolean صريح دائماً
+        var boolVal = (p.value === true || p.value === 'true' || p.value === 1);
+        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).setUpdateRequired(p.pass, p.rowIndex, boolVal);
+      } else if (action === 'approveAll') {
+        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).approveAll(p.pass);
+      } else if (action === 'saveDownloadDate') {
+        google.script.run.withSuccessHandler(function(){ resolve({success:true}); }).withFailureHandler(reject).saveDownloadDate(p.email, p.dateStr);
+      } else {
+        reject(new Error('unknown action: ' + action));
+      }
+    } else {
+      // ── PWA / fetch mode ──
+      var getActions = ['checkPass','getAllMembers','getStats','getHeaders','getMapping'];
+      if (getActions.indexOf(action) !== -1) {
+        var url = new URL(API_URL);
+        url.searchParams.set('action', action);
+        if (params.pass)  url.searchParams.set('pass', params.pass);
+        if (params.email) url.searchParams.set('email', params.email);
+        fetch(url.toString())
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            if (action === 'checkPass') resolve(data.ok);
+            else resolve(data);
+          })
+          .catch(reject);
+      } else {
+        fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(Object.assign({ action: action }, params)),
+        })
+          .then(function(r){ return r.json(); })
+          .then(resolve)
+          .catch(reject);
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════
+// FIELD DEFS
+// ══════════════════════════════════════════
+var FIELD_DEFS = [
+  { key:'name',               label:'الاسم (عربي) *',       req:true  },
+  { key:'name_en',            label:'الاسم (إنجليزي)',       req:false },
+  { key:'email',              label:'الإيميل المؤسسي *',     req:true  },
+  { key:'dept',               label:'القسم',                 req:false },
+  { key:'faculty',            label:'الكلية',                req:false },
+  { key:'rank',               label:'الدرجة الوظيفية',       req:false },
+  { key:'personal_url',       label:'رابط الصفحة الشخصية',  req:false },
+  { key:'pub_count',          label:'عدد الأبحاث',           req:false },
+  { key:'scopus_url',         label:'Scopus (رابط)',         req:false },
+  { key:'scopus_id',          label:'Scopus ID',             req:false },
+  { key:'orcid',              label:'ORCID',                 req:false },
+  { key:'scholar',            label:'Google Scholar',        req:false },
+  { key:'researchgate',       label:'ResearchGate',          req:false },
+  { key:'wos_url',            label:'WOS (رابط)',            req:false },
+  { key:'wos_id',             label:'WOS Res. ID',           req:false },
+  { key:'status',             label:'عمود الحالة *',         req:true  },
+  { key:'needs_update',       label:'تحديث مطلوب',           req:false },
+  { key:'last_download_date', label:'تاريخ آخر تحميل',       req:false },
+];
+
+// ══════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════
+function doLogin() {
+  var p = document.getElementById('passInput').value.trim();
+  if (!p) return;
+  var btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = '⏳ جاري التحقق...';
+  apiCall('checkPass', { pass: p })
+    .then(function(ok) {
+      if (ok) {
+        PASS = p;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appHeader').style.display   = 'flex';
+        document.getElementById('appMain').style.display     = 'block';
+        loadMembers();
+      } else {
+        showLoginErr('كلمة السر غلط');
+        btn.disabled = false; btn.textContent = 'دخول';
+      }
+    })
+    .catch(function(e) {
+      showLoginErr('خطأ: ' + e.message);
+      btn.disabled = false; btn.textContent = 'دخول';
+    });
+}
+function showLoginErr(msg) {
+  var el = document.getElementById('loginErr');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+// ══════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ══════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════
+function isExpired(lastDateStr) {
+  if (!lastDateStr) return false;
+  var last = new Date(lastDateStr);
+  if (isNaN(last)) return false;
+  var expiry = new Date(last);
+  expiry.setFullYear(expiry.getFullYear() + 1);
+  return new Date() > expiry;
+}
+function needsUpdate(m) {
+  var v = String(m.needs_update || '').trim();
+  return v === 'نعم' || v === 'TRUE' || v === 'true' || v === '1';
+}
+
+// ══════════════════════════════════════════
+// LOAD MEMBERS
+// ══════════════════════════════════════════
+function loadMembers() {
+  document.getElementById('tblBody').innerHTML =
+    '<tr><td colspan="9" class="loading">⏳ جاري التحميل...</td></tr>';
+  apiCall('getAllMembers', { pass: PASS })
+    .then(function(data) {
+      if (data.error) { toast('❌ ' + data.error); return; }
+      allMembers = data.members || [];
+      updateStats();
+      renderTable();
+    })
+    .catch(function(e) { toast('❌ ' + e.message); });
+}
+
+function updateStats() {
+  var approved = allMembers.filter(function(m){ return m.status === 'معتمد'; }).length;
+  var update   = allMembers.filter(function(m){ return needsUpdate(m); }).length;
+  document.getElementById('s-total').textContent    = allMembers.length;
+  document.getElementById('s-approved').textContent = approved;
+  document.getElementById('s-pending').textContent  = allMembers.length - approved;
+  document.getElementById('s-update').textContent   = update;
+}
+
+// ══════════════════════════════════════════
+// RENDER TABLE
+// ══════════════════════════════════════════
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.ftab').forEach(function(t){ t.classList.remove('active'); });
+  btn.classList.add('active');
+  renderTable();
+}
+
+function renderTable() {
+  var q = (document.getElementById('searchInp').value || '').toLowerCase();
+  var filtered = allMembers.filter(function(m) {
+    var expired = isExpired(m.last_download_date);
+    var upd     = needsUpdate(m);
+    var mf = activeFilter === 'all'      ? true :
+             activeFilter === 'approved' ? m.status === 'معتمد' :
+             activeFilter === 'pending'  ? m.status !== 'معتمد' :
+             activeFilter === 'update'   ? upd :
+             activeFilter === 'expired'  ? expired : true;
+    var ms = !q
+      || (m.name||'').toLowerCase().indexOf(q) !== -1
+      || (m.email||'').toLowerCase().indexOf(q) !== -1
+      || (m.dept||'').toLowerCase().indexOf(q) !== -1;
+    return mf && ms;
+  });
+
+  var tbody = document.getElementById('tblBody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-row">لا توجد نتائج</td></tr>';
+    document.getElementById('tbl-count').textContent = '';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(function(m, i) {
+    var isApp   = m.status === 'معتمد';
+    var expired = isExpired(m.last_download_date);
+    var upd     = needsUpdate(m);
+
+    var lastDlLabel = '—';
+    if (m.last_download_date) {
+      var d = new Date(m.last_download_date);
+      if (!isNaN(d)) lastDlLabel = pad(d.getDate(),2)+'/'+pad(d.getMonth()+1,2)+'/'+d.getFullYear();
+    }
+
+    var statusBadge = isApp
+      ? '<span class="badge badge-a">✅ معتمد</span>'
+      : '<span class="badge badge-p">⏳ انتظار</span>';
+    if (expired) statusBadge += ' <span class="badge badge-exp">❌ منتهي</span>';
+
+    var updBadge = upd
+      ? '<span class="badge badge-u">⚠️ مطلوب</span>'
+      : '<span style="color:var(--muted);font-size:11px">—</span>';
+
+    var rowClass = expired ? 'row-expired' : (upd ? 'row-update-req' : '');
+
+    // ✅ استخدام data-attributes بدل inline onclick لتجنب مشاكل الـ string/boolean
+    return '<tr class="' + rowClass + '">' +
+      '<td style="color:var(--muted);font-size:11px">' + (i+1) + '</td>' +
+      '<td><div class="td-name">' + esc(m.name) + '</div></td>' +
+      '<td><div class="td-email">' + esc(m.email) + '</div></td>' +
+      '<td style="font-size:11px;color:var(--muted)">' + esc(m.dept||'—') + '</td>' +
+      '<td style="font-size:11px;color:var(--muted)">' + esc(m.rank||'—') + '</td>' +
+      '<td>' + statusBadge + '</td>' +
+      '<td><div class="td-date">' + lastDlLabel + '</div></td>' +
+      '<td>' + updBadge + '</td>' +
+      '<td><div class="td-actions">' +
+        (isApp
+          ? '<button class="btn btn-danger btn-sm" data-action="revoke" data-row="' + m.rowIndex + '">↩️ إلغاء</button>'
+          : '<button class="btn btn-success btn-sm" data-action="approve" data-row="' + m.rowIndex + '">✅ اعتماد</button>') +
+        (upd
+          ? '<button class="btn btn-orange-off btn-sm" data-action="update-off" data-row="' + m.rowIndex + '" data-name="' + esc(m.name) + '">✔ إلغاء التحديث</button>'
+          : '<button class="btn btn-orange btn-sm" data-action="update-on" data-row="' + m.rowIndex + '" data-name="' + esc(m.name) + '">⚠️ طلب تحديث</button>') +
+        '<button class="btn btn-outline btn-sm" data-action="edit" data-row="' + m.rowIndex + '">✏️ تعديل</button>' +
+      '</div></td>' +
+    '</tr>';
+  }).join('');
+
+  document.getElementById('tbl-count').textContent =
+    'عرض ' + filtered.length + ' من ' + allMembers.length + ' عضو';
+}
+
+// ✅ Event delegation — بدل inline onclick — حل نهائي لمشكلة Boolean
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  var action  = btn.getAttribute('data-action');
+  var rowIndex = parseInt(btn.getAttribute('data-row'));
+  var name    = btn.getAttribute('data-name') || '';
+
+  if (action === 'approve') {
+    changeStatus(rowIndex, 'معتمد');
+  } else if (action === 'revoke') {
+    changeStatus(rowIndex, '');
+  } else if (action === 'update-on') {
+    toggleUpdate(rowIndex, true, name);
+  } else if (action === 'update-off') {
+    toggleUpdate(rowIndex, false, name);
+  } else if (action === 'edit') {
+    openEdit(rowIndex);
+  }
+});
+
+// ══════════════════════════════════════════
+// ACTIONS
+// ══════════════════════════════════════════
+function changeStatus(rowIndex, newStatus) {
+  apiCall('setStatus', { pass: PASS, rowIndex: rowIndex, status: newStatus })
+    .then(function(res) {
+      if (res.error) { toast('❌ ' + res.error); return; }
+      var m = allMembers.find(function(x){ return x.rowIndex === rowIndex; });
+      if (m) m.status = newStatus;
+      updateStats(); renderTable();
+      toast(newStatus === 'معتمد' ? '✅ تم الاعتماد' : '↩️ تم إلغاء الاعتماد');
+    })
+    .catch(function(e) { toast('❌ ' + e.message); });
+}
+
+function toggleUpdate(rowIndex, enable, name) {
+  // enable هنا boolean حقيقي دايماً لأنه جاي من event delegation مش من onclick string
+  var title = enable ? '⚠️ طلب تحديث' : '✔ إلغاء التحديث';
+  var label = enable
+    ? 'طلب تحديث البيانات من "' + name + '"؟'
+    : 'إلغاء طلب التحديث من "' + name + '"؟';
+
+  showModal(title, label, function() {
+    apiCall('setUpdateRequired', { pass: PASS, rowIndex: rowIndex, value: enable })
+      .then(function(res) {
+        if (res && res.error) { toast('❌ ' + res.error); return; }
+        var m = allMembers.find(function(x){ return x.rowIndex === rowIndex; });
+        if (m) m.needs_update = enable ? 'نعم' : '';
+        updateStats(); renderTable();
+        toast(enable ? '⚠️ تم تفعيل طلب التحديث' : '✔ تم إلغاء طلب التحديث');
+      })
+      .catch(function(e) { toast('❌ ' + e.message); });
+  });
+}
+
+function confirmApproveAll() {
+  var pending = allMembers.filter(function(m){ return m.status !== 'معتمد'; }).length;
+  if (!pending) { toast('✅ كل الأعضاء معتمدون بالفعل'); return; }
+  showModal(
+    '✅ اعتماد الكل',
+    'سيتم اعتماد <strong>' + pending + '</strong> عضو دفعة واحدة. هل أنت متأكد؟',
+    function() {
+      toast('⏳ جاري الاعتماد...');
+      apiCall('approveAll', { pass: PASS })
+        .then(function(res) {
+          if (res.error) { toast('❌ ' + res.error); return; }
+          toast('✅ تم اعتماد ' + res.count + ' عضو');
+          loadMembers();
+        })
+        .catch(function(e) { toast('❌ ' + e.message); });
+    }
+  );
+}
+
+// ══════════════════════════════════════════
+// COLUMN MAPPING
+// ══════════════════════════════════════════
+function loadHeaders() {
+  var btn = document.getElementById('loadHdrBtn');
+  btn.disabled = true; btn.textContent = '⏳ جاري التحميل...';
+  apiCall('getHeaders', { pass: PASS })
+    .then(function(data) {
+      btn.disabled = false; btn.textContent = '📥 تحميل أعمدة الشيت';
+      if (data.error) { showMapMsg('❌ ' + data.error, 'error'); return; }
+      sheetHeaders = data.headers;
+      buildMappingUI();
+      document.getElementById('mappingArea').style.display = 'block';
+    })
+    .catch(function(e) {
+      btn.disabled = false; btn.textContent = '📥 تحميل أعمدة الشيت';
+      showMapMsg('❌ ' + e.message, 'error');
+    });
+}
+
+function buildMappingUI() {
+  var autoHints = {
+    name:['اسم','الاسم','name'], name_en:['english','انجليزي','إنجليزي'],
+    email:['ايميل','إيميل','email','mail','بريد'], dept:['قسم','dept','department'],
+    faculty:['كلية','faculty'], rank:['درجة','rank','وظيفة','title'],
+    personal_url:['صفحة','personal','profile'], pub_count:['أبحاث','publications','pub'],
+    scopus_url:['scopus','سكوبس'], scopus_id:['scopus id'],
+    orcid:['orcid'], scholar:['scholar'], researchgate:['researchgate'],
+    wos_url:['wos','web of science'], wos_id:['wos res','wos id'],
+    status:['حالة','status','اعتماد','approved'],
+    needs_update:['تحديث','update required','needs update'],
+    last_download_date:['آخر تحميل','last download','download date'],
+  };
+  var autoMap = {};
+  sheetHeaders.forEach(function(h, i) {
+    var lc = h.toLowerCase();
+    FIELD_DEFS.forEach(function(f) {
+      if (autoMap[f.key] === undefined && autoHints[f.key]) {
+        if (autoHints[f.key].some(function(hint){ return lc.indexOf(hint) !== -1; }))
+          autoMap[f.key] = i + 1;
+      }
+    });
+  });
+  document.getElementById('mapGrid').innerHTML = FIELD_DEFS.map(function(f) {
+    return '<div class="map-row ' + (f.req ? 'map-required' : '') + '">' +
+      '<div class="map-label">' + f.label + '</div>' +
+      '<div class="map-arrow">←</div>' +
+      '<select class="map-sel" id="msel_' + f.key + '">' +
+        '<option value="">— لا يوجد —</option>' +
+        sheetHeaders.map(function(h, i) {
+          return '<option value="' + (i+1) + '"' + (autoMap[f.key] === i+1 ? ' selected' : '') + '>' + h + '</option>';
+        }).join('') +
+      '</select></div>';
+  }).join('');
+  showMapMsg('', '');
+}
+
+function saveMapping() {
+  var mapping = {};
+  var missing = [];
+  FIELD_DEFS.forEach(function(f) {
+    var el = document.getElementById('msel_' + f.key);
+    var val = el ? el.value : '';
+    if (val) mapping[f.key] = parseInt(val);
+    else if (f.req) missing.push(f.label);
+  });
+  if (missing.length) {
+    showMapMsg('⚠️ الحقول الإلزامية غير محددة: ' + missing.join('، '), 'error');
+    return;
+  }
+  apiCall('saveMapping', { pass: PASS, mapping: mapping })
+    .then(function(res) {
+      if (res.error) { showMapMsg('❌ ' + res.error, 'error'); return; }
+      showMapMsg('✅ تم حفظ الربط بنجاح!', 'success');
+      toast('✅ تم حفظ ربط الأعمدة');
+      loadMembers();
+    })
+    .catch(function(e) { showMapMsg('❌ ' + e.message, 'error'); });
+}
+
+function showMapMsg(msg, type) {
+  var el = document.getElementById('mapMsg');
+  if (!msg) { el.innerHTML = ''; return; }
+  var colors = { error:'rgba(139,32,32,.15)', success:'rgba(45,122,79,.12)' };
+  var textColors = { error:'#e06060', success:'#4aac78' };
+  el.innerHTML = '<div style="background:' + colors[type] + ';color:' + textColors[type] + ';border-radius:8px;padding:10px;font-size:12px">' + msg + '</div>';
+}
+
+// ══════════════════════════════════════════
+// EDIT MEMBER
+// ══════════════════════════════════════════
+var EDIT_FIELDS = ['name','name_en','email','dept','faculty','rank',
+  'personal_url','pub_count','scopus_url','scopus_id',
+  'orcid','scholar','researchgate','wos_url','wos_id'];
+
+function openEdit(rowIndex) {
+  var m = allMembers.find(function(x){ return x.rowIndex === rowIndex; });
+  if (!m) return;
+  editRowIndex = rowIndex;
+  document.getElementById('editSub').textContent = m.name + ' — ' + (m.email || '');
+  EDIT_FIELDS.forEach(function(k) {
+    var el = document.getElementById('ef_' + k);
+    if (el) el.value = m[k] || '';
+  });
+  document.getElementById('savingIndicator').style.display = 'none';
+  document.getElementById('saveEditBtn').disabled = false;
+  document.getElementById('editOverlay').classList.add('show');
+}
+
+function closeEdit() {
+  document.getElementById('editOverlay').classList.remove('show');
+  editRowIndex = null;
+}
+
+function saveEdit() {
+  if (!editRowIndex) return;
+  var updates = {};
+  EDIT_FIELDS.forEach(function(k) {
+    var el = document.getElementById('ef_' + k);
+    if (el) updates[k] = el.value.trim();
+  });
+  document.getElementById('savingIndicator').style.display = 'flex';
+  document.getElementById('saveEditBtn').disabled = true;
+  apiCall('updateMember', { pass: PASS, rowIndex: editRowIndex, updates: updates })
+    .then(function(res) {
+      document.getElementById('savingIndicator').style.display = 'none';
+      document.getElementById('saveEditBtn').disabled = false;
+      if (res.error) { toast('❌ ' + res.error); return; }
+      var m = allMembers.find(function(x){ return x.rowIndex === editRowIndex; });
+      if (m) Object.assign(m, updates);
+      closeEdit(); updateStats(); renderTable();
+      toast('✅ تم حفظ التعديلات بنجاح');
+    })
+    .catch(function(e) {
+      document.getElementById('savingIndicator').style.display = 'none';
+      document.getElementById('saveEditBtn').disabled = false;
+      toast('❌ ' + e.message);
+    });
+}
+
+// ══════════════════════════════════════════
+// MODAL & TOAST
+// ══════════════════════════════════════════
+function showModal(t, m, cb) {
+  document.getElementById('modalTitle').textContent = t;
+  document.getElementById('modalMsg').innerHTML = m;
+  document.getElementById('modal').classList.add('show');
+  modalCB = cb;
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  modalCB = null;
+}
+function confirmModal() {
+  var cb = modalCB;
+  closeModal();
+  if (cb) cb();
+}
+
+function toast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(tt);
+  tt = setTimeout(function(){ el.classList.remove('show'); }, 3200);
+}
+
+function pad(n,l){ return String(n).padStart(l,'0'); }
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
